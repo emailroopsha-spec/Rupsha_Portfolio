@@ -1,0 +1,734 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rupsha | UX Research & Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;700;900&family=Noto+Serif:ital,wght@1,400&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --rose-accent: #fda4af;
+            --mint-accent: #86efac;
+            --highlight-red: #ef4444;
+            --pastel-pink: #fecaca;
+            --container-bg: rgba(255, 241, 242, 0.5);
+        }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            scroll-behavior: smooth;
+            background-color: var(--bg-primary);
+            overflow-x: hidden;
+            color: #18181b;
+        }
+
+        canvas {
+            image-rendering: -webkit-optimize-contrast;
+            filter: contrast(1.02) saturate(1.05);
+        }
+
+        .knowledge-card {
+            transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.5s ease;
+            will-change: transform, opacity;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
+
+        .tracking-ultra { letter-spacing: 0.4em; }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .hud-dot { animation: pulse-soft 3s infinite ease-in-out; }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .profile-img-blend {
+            mix-blend-mode: multiply;
+        }
+
+        .project-grid-container {
+            background-color: var(--container-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(251, 113, 133, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-grid-container:hover {
+            border-color: rgba(251, 113, 133, 0.3);
+            background-color: rgba(255, 241, 242, 0.7);
+            transform: translateY(-4px);
+        }
+
+        .signature-container {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto 2.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .signature-video {
+            width: 100%;
+            height: auto;
+            display: block;
+            mix-blend-mode: multiply;
+            clip-path: inset(0 100% 0 0);
+            animation: reveal 2.5s cubic-bezier(0.19, 1, 0.22, 1) forwards, float 6s ease-in-out infinite;
+            animation-delay: 0.3s, 2.8s;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            mask-image: radial-gradient(white, black);
+        }
+
+        @keyframes reveal {
+            from { clip-path: inset(0 100% 0 0); }
+            to { clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .red-highlight { color: var(--highlight-red); font-weight: 500; }
+
+        .project-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .project-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .overlay-content {
+            min-height: 100vh;
+            width: 100%;
+            transform: translateY(100vh);
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            background: transparent;
+        }
+
+        .project-overlay.active .overlay-content {
+            transform: translateY(0);
+        }
+
+        .overview-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #fff1f2;
+            color: #f43f5e;
+            border-radius: 99px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .project-row {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .project-row:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateX(4px);
+        }
+
+        .close-btn-fixed {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 2100;
+            background: white;
+            border-radius: 99px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+        
+        .project-overlay.active .close-btn-fixed {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        .close-btn-fixed:hover {
+            transform: scale(1.1);
+            background: #f43f5e;
+            color: white !important;
+        }
+
+        .screen-gallery::-webkit-scrollbar { height: 4px; }
+        .screen-gallery::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 10px; }
+
+        @keyframes scroll-x {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .scroll-container-animate {
+            display: flex;
+            width: 200%;
+            animation: scroll-x 15s linear infinite;
+        }
+        .scroll-container-animate:hover { animation-play-state: paused; }
+
+        .footer-cursive {
+            font-family: 'Dancing Script', cursive;
+            font-style: italic;
+            letter-spacing: 0.05em;
+        }
+
+        .recursive-writeup {
+            font-family: 'Dancing Script', cursive;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            color: #4b5563; 
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            line-height: 2.5; 
+        }
+    </style>
+</head>
+<body class="selection:bg-red-100 selection:text-red-900">
+
+    <div id="projectOverlay" class="project-overlay">
+        <button onclick="closeProject()" class="close-btn-fixed p-4 text-zinc-400 hover:text-zinc-900 transition-colors">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        <div id="overlayBody" class="overlay-content"></div>
+    </div>
+
+    <canvas id="geometricCanvas" class="fixed inset-0 w-full h-full -z-10 pointer-events-none"></canvas>
+
+    <div class="fixed bottom-8 left-8 z-40 hidden md:flex flex-col gap-1.5 text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-400 opacity-50 pointer-events-none">
+        <div class="flex items-center gap-2">
+            <span class="hud-dot w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+        </div>
+        <div>Recursive_Level::<span id="hudDepth" class="text-zinc-600">0</span></div>
+    </div>
+
+    <div id="mainNav" class="fixed top-8 left-1/2 -translate-x-1/2 z-5 w-full max-w-xl px-6">
+        <nav class="glass-nav shadow-[0_8px_32px_rgba(0,0,0,0.03)] rounded-full px-10 py-5 flex justify-between items-center transition-all hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)]">
+            <div class="flex flex-col">
+                <span class="text-[15px] font-bold tracking-tight text-zinc-900 leading-none">Rupsha</span>
+                <span class="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-400 mt-1.5">UX Researcher & Designer</span>
+            </div>
+            <div class="flex items-center">
+                <img src="./asserts/image 3.png" alt="Profile" class="profile-img-blend h-12 w-auto object-contain border-none  rounded-lg">
+            </div>
+        </nav>
+    </div>
+
+    <section class="h-[350vh] flex flex-col items-center justify-center relative pointer-events-none">
+        <div id="scrollIndicator" class="absolute bottom-12 flex flex-col items-center gap-5 transition-opacity duration-700">
+            <span class="text-[10px] font-mono uppercase tracking-[0.6em] text-zinc-300">Initiate Scroll</span>
+            <div class="w-[1px] h-20 bg-gradient-to-b from-zinc-200 to-transparent"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+
+        <div id="recursiveText" class="recursive-writeup fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl px-12 text-center opacity-0 pointer-events-none">
+            <p class="text-base md:text-xl font-medium">
+                I believe Design starts with one human insight and grows through explorations. Just like a fractal unfolding into meaning.
+            </p>
+        </div>
+    </section>
+
+    <main class="relative z-10 pb-[10vh] px-6">
+        <div id="knowledgeCard" class="knowledge-card max-w-4xl mx-auto bg-white rounded-[3.5rem] shadow-[0_100px_200px_-50px_rgba(0,0,0,0.08)] border border-zinc-100 overflow-hidden opacity-0 translate-y-[40vh]">
+            
+            <div class="pt-16 pb-12 px-8 md:px-20 text-left relative">
+                <div class="signature-container">
+                    <video id="signatureVideo" autoplay loop muted playsinline class="signature-video bg-zinc-50">
+                        <source src="./asserts/rupsha name.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <div class="max-w-3xl mt-12 space-y-8">
+                    <div>
+                        <h3 class="text-[11px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">About me</h3>
+                        <p class="text-lg md:text-xl text-zinc-800 leading-relaxed font-normal text-left">
+                            Hello, I'm <span class="text-zinc-950 font-bold">Rupsha</span>, a UX research-focused product designer with a background in <span class="red-highlight">architecture</span>, studying <span class="red-highlight">Digital Product Design</span> & Management at IIIT Bangalore.
+                            <br><br>
+                            Currently, I'm a <span class="red-highlight">Research Fellow</span> at the Pranava Institute (in collaboration with the University of Leeds), working on youth, accessibility, and digital platforms in Global South contexts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-8 md:px-20 pb-16 space-y-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="p-8 project-grid-container rounded-[2rem]">
+                        <h3 class="text-[11px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">UX Research & Fellowships</h3>
+                        <div id="researchList" class="space-y-2"></div>
+                    </div>
+                    <div class="p-8 project-grid-container rounded-[2rem]">
+                        <h3 class="text-[11px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">Product & UX Case Studies</h3>
+                        <div id="caseStudyList" class="space-y-2"></div>
+                    </div>
+                    <div class="p-8 project-grid-container rounded-[2rem]">
+                        <h3 class="text-[11px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">Professional Experience & Applied Research</h3>
+                        <div id="experienceList" class="space-y-2"></div>
+                    </div>
+                    <div class="p-8 project-grid-container rounded-[2rem]">
+                        <h3 class="text-[11px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">Explorations & Concept Work</h3>
+                        <div id="explorationList" class="space-y-2"></div>
+                    </div>
+                    <div class="p-8 project-grid-container rounded-[2rem]">
+                        <h3 class="text-[11px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">Architecture → Human-Centered Design</h3>
+                        <div id="architectureList" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-container px-8 md:px-20 py-12 bg-rose-50/60 border-t border-rose-100/50">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex flex-col text-center md:text-left">
+                        <h4 class="text-2xl md:text-3xl footer-cursive text-zinc-600 leading-tight">Always happy to learn more!</h4>
+                    </div>
+                    <div class="flex items-center gap-8">
+                        <a href="mailto:emailroopsha@gmail.com" aria-label="email: emailroopsha@gmail.com" title="emailroopsha@gmail.com" class="w-12 h-12 flex items-center justify-center bg-white rounded-full text-zinc-600 shadow-sm hover:shadow-md hover:scale-110 hover:text-rose-500 transition-all">
+                            <i data-lucide="mail" class="w-5 h-5"></i>
+                            <span class="sr-only">emailroopsha@gmail.com</span>
+                        </a>
+                        <a href="https://www.linkedin.com/in/rupsha-ghosh-5831a0212" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn: Rupsha Ghosh" title="Rupsha on LinkedIn" class="w-12 h-12 flex items-center justify-center bg-white rounded-full text-zinc-600 shadow-sm hover:shadow-md hover:scale-110 hover:text-rose-500 transition-all">
+                            <i data-lucide="linkedin" class="w-5 h-5"></i>
+                            <span class="sr-only">LinkedIn: Rupsha Ghosh</span>
+                        </a>
+                        <a href="https://www.instagram.com/doodlinginleisure?igsh=MXhkZWx3OWpob2ZzNQ%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram: doodlinginleisure" title="doodlinginleisure on Instagram" class="w-12 h-12 flex items-center justify-center bg-white rounded-full text-zinc-600 shadow-sm hover:shadow-md hover:scale-110 hover:text-rose-500 transition-all">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                            <span class="sr-only">Instagram: doodlinginleisure</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const portfolioData = {
+            research: [
+                {
+                    id: 'ytf-fellowship',
+                    title: 'Youth, Digital Platforms & Inclusion Research — YTF Fellowship (Pranava Institute × University of Leeds)',
+                    meta: 'Research Fellowship',
+                    details: {
+                        subtitle: 'Pranava Institute × University of Leeds',
+                        context: 'This ongoing research explores young people’s digital experiences to understand user needs, access barriers, and everyday interactions with digital platforms.<br><br>At YTF we are conducting qualitative user research including interviews and narrative inquiry, and synthesize findings into emerging insights, opportunity areas, and early design implications.<br><br>Working across the full research-to-design cycle, from problem framing and sense-making to informing potential product, experience, and policy directions, I am collaborating with interdisciplinary researchers and mentors as part of a joint initiative between the Pranava Institute and the University of Leeds.',
+                        methodologies: [],
+                        impact: null
+                    }
+                },
+                {
+                    id: 'learning-scroll',
+                    title: 'Learning in the Scroll',
+                    meta: 'Qualitative UX Study',
+                    details: {
+                        subtitle: 'Short-form Video Experiences',
+                        context: 'This research explored how Indian college students use short-form video platforms such as Instagram Reels and YouTube Shorts for learning, skill discovery, and unexpected professional exposure.<br><br>Through an exploratory qualitative study, we examined how visual micro-content supports informal learning while also creating tensions around distraction, credibility, and surface-level understanding. The work aimed to understand real user behaviors beyond traditional education tools and generate insights for digital learning platforms.',
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'View full research paper',
+                            url: 'http://docs.google.com/document/d/1wg7hVc96ck6jA4UV3a3i3433OEGEXuKVOHwPrXEGK6o/edit?tab=t.0#heading=h.7m6iotlucsyi'
+                        }
+                    }
+                }
+            ],
+            caseStudies: [
+                {
+                    id: 'breakmate',
+                    title: 'BreakMate — UX Research–Informed Design of a Social & Wellness App',
+                    meta: 'Product Case Study',
+                    details: {
+                        subtitle: 'Safety & Social Wellness',
+                        context: 'BreakMate is a mobile app concept designed to support women’s safety, well-being, and social connection through activity-based matching rather than dating.<br><br>The project explored how familiar swipe interactions (inspired by dating platforms) could be reimagined for non-romantic use cases ,allowing users to find companions for walking, fitness, leisure activities, and community engagement based on shared interests and availability.<br><br>Grounded in UX research on women’s mobility, urban safety, and motivation for physical activity, the design prioritised trust, comfort, and ease of use while encouraging real-world interaction in a safe environment.',
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'See Process & Design Outcome',
+                            url: 'http://drive.google.com/file/d/1DVy8_HT287iasWKIMbSPN3R4b8ev8Vxa/view?usp=sharing'
+                        }
+                    }
+                },
+                {
+                    id: 'marketguide',
+                    title: 'MarketGuide — UX Strategy & Product Concept for Trust in Stock Market News',
+                    meta: 'UX Strategy',
+                    details: {
+                        subtitle: 'FinTech Trust & Verification',
+                        context: 'MarketGuide is a product strategy and UX concept designed to address the challenges of misinformation and lack of transparency in stock market news for retail investors.<br><br>In an era of rapid digital information, retail investors often face difficulty in verifying the credibility of news sources and analysts. MarketGuide explores a conceptual framework for aggregating, verifying, and ranking market news based on accuracy, historical performance, and source reliability.<br><br>The project focused on defining a trust-first experience, involving user journey mapping, strategic positioning, and interaction design to help investors make more informed, data-driven decisions with confidence.',
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'View full product concept & strategy',
+                            url: 'https://drive.google.com/file/d/1uTLieLw1VMkgX-My24WUj2dFz6LeCEga/view?usp=sharing'
+                        }
+                    }
+                },
+                {
+                    id: 'cherrywork',
+                    title: 'Cherrywork — APA Automation (SAP-Based)',
+                    meta: 'Experience Strategy',
+                    details: {
+                        subtitle: 'Accounts Payable Automation platform',
+                        context: 'Cherrywork is an enterprise Accounts Payable automation platform built on SAP BTP to reduce manual invoice processing, improve accuracy, and support large-scale digital transformation in finance teams.<br><br>In this project, I worked on UX research, user segmentation, persona development, and experience strategy to align automation features with real operational and business needs. Through purpose-driven segmentation, I identified distinct user groups including AP managers, finance leaders, and digital transformation teams, each with different motivations around efficiency, cost, compliance, and scalability.<br><br>The project further explored real-world use cases of invoice intake, AI-driven extraction, exception handling, and clean-core SAP integration, shaping a cohesive product story for automation at enterprise scale.',
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'Presentation to Cherrywork Team and Research Deck',
+                            url: 'https://drive.google.com/file/d/1c9xpgagjITzbcb6iruh1AwFTAFlNp26q/view?usp=sharing'
+                        }
+                    }
+                }
+            ],
+            experience: [
+                {
+                    id: 'niche-architects',
+                    title: 'Architectural Internship at Niche Architects — Research-Led Space Planning & User-Centered Design',
+                    meta: '2018 — 2019',
+                    details: {
+                        subtitle: 'Multidisciplinary Space Design',
+                        context: 'During my architectural internship at Niche Architects, I worked across museum exhibit design, residential architecture, landscape planning, and parametric product design, applying research-driven approaches to create functional and user-centered spaces.<br><br>My work involved studying user movement, spatial experience, and real-world constraints to inform layouts, elevations, and interactive environments — including the design of immersive museum exhibits such as the ISS and futuristic spacecraft zones for the Jajpur Science Museum in Odisha.<br><br>Across projects, I contributed to spatial planning, 3D modeling, working drawings, and experience-focused design decisions that balanced aesthetics, usability, and real-world construction needs.',
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'View full internship report',
+                            url: 'https://drive.google.com/file/d/1T7sCPKKivGlpGuYFKemfLhSFI5o3uYLJ/view?usp=sharing'
+                        }
+                    }
+                },
+                {
+                    id: 'urban-gis',
+                    title: 'Urban GIS Mapping for Safer Mobility & Spatial Planning',
+                    meta: 'Spatial Research',
+                    details: {
+                        subtitle: 'Temporal Spatial Research',
+                        context: 'Conducted time-based spatial research to understand everyday movement patterns, safety cues, and social activity in a dense urban heritage corridor.<br><br>Used GIS mapping and on-ground observation to document how people occupy and move through space across different times of day; morning, afternoon, evening, and night. Mapped key behavioral and environmental indicators including pedestrian flow, morning walk routes, newspaper vendors, local gathering spots, restaurants, shop closures, stray dog movement, and high-activity zones.<br><br>Synthesised temporal patterns to identify:<br>• Safest and most active mobility routes<br>• Areas of low visibility and reduced footfall<br>• Opportunities for community infrastructure such as animal care points and safer pedestrian planning<br><br>Translated spatial insights into design and planning implications for safer urban mobility, public space activation, and inclusive infrastructure in heritage contexts.',
+                        methodologies: [],
+                        impact: 'visual_scroll',
+                        impactData: {
+                            images: [
+                                './asserts/gis mapping.jpg',
+                                './asserts/gis mapping.jpg'
+                            ],
+                            captions: ['Activity: 8 AM to 10 AM', 'Activity: 8 PM to 10 PM']
+                        }
+                    }
+                }
+            ],
+            explorations: [
+                {
+                    id: 'ondewall',
+                    title: 'Strategic Design Thinking – “ONDEWALL”',
+                    meta: 'Mirror on the Wall project',
+                    details: {
+                        subtitle: 'Smart Interior Interfaces',
+                        context: `An exploratory design project focused on understanding men’s attitudes toward self-care, grooming, and wellness within socio-cultural contexts.
+                        <br><br>
+                        Conducted qualitative interviews and persona development to uncover barriers around stigma, motivation, and accessibility in personal care behaviors. Synthesised insights into a clearly framed UX problem, translating research findings into opportunity areas for behavior-driven product design.
+                        <br><br>
+                        Designed early user journeys, interaction flows, and conceptual experiences for a connected device and mobile app ecosystem aimed at encouraging healthier self-care habits.
+                        <br><br>
+                        This project demonstrates research-led problem framing, concept development, and experience design within a strategic design thinking framework.`,
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'Click here to view the full project concept & design process',
+                            url: 'https://drive.google.com/file/d/1nd08Vm2CbI9ceD_pdtBIu31YMbUoQT_1/view?usp=sharing'
+                        }
+                    }
+                },
+                {
+                    id: 'multisensory',
+                    title: 'Multisensory design exploration for inclusive workspace',
+                    meta: 'Workspace Exploration',
+                    details: {
+                        subtitle: 'Inclusive Workspace Design',
+                        context: 'An accessibility-focused design exploration reimagining workspaces as multisensory environments for visually and hearing-imaired users.<br><br>Translated universal design research into tactile wayfinding, sensory cues, and inclusive spatial strategies through iterative sketch-based design.',
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'View full exploration & design concepts',
+                            url: 'http://drive.google.com/file/d/1KKV-WLAOzayPtpcH4zKGS60vKkQpko9P/view?usp=sharing'
+                        }
+                    }
+                }
+            ],
+            architecture: [
+                {
+                    id: 'tea-estate',
+                    title: 'Experiential Tea Estate in Darjeeling — Human-Centered Spatial Design Thesis',
+                    meta: 'Architecture Thesis',
+                    details: {
+                        subtitle: 'Sensory HCD in Space',
+                        context: `This thesis explored how spatial design can bridge tourism, tea production, and everyday life on Darjeeling tea estates through a human-centered research approach.
+                        <br><br>
+                        I conducted contextual research across tea estates, studying worker routines, visitor behaviors, cultural practices, and environmental conditions through site visits, case studies, and secondary research. This helped uncover gaps between how tea estates are experienced by tourists and how they function as living, working communities.
+                        <br><br>
+                        Using research insights, I developed a spatial design proposal that integrates production spaces, hospitality, and cultural storytelling into a connected experiential landscape. The design prioritised intuitive circulation, inclusive community spaces, and immersive visitor journeys rooted in real user needs and local context.`,
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'View full project',
+                            url: 'https://drive.google.com/file/d/1x-3TL0JdKNi3gkjlx7EDND0beIi8gI9D/view?usp=sharing'
+                        }
+                    }
+                },
+                {
+                    id: 'iss-museum',
+                    title: 'Space Shuttle & ISS Museum Exhibit — Research-Driven Spatial Design & Experience Planning',
+                    meta: 'Exhibition Design',
+                    details: {
+                        subtitle: 'Educational Space Planning',
+                        context: `Conducted user-centered spatial research to design a life-size Space Shuttle and ISS museum exhibit focused on learning, movement flow, and visitor engagement.
+                        <br><br>
+                        Studied visitor behavior, circulation patterns, viewing angles, and educational interaction needs to plan layouts, sections, elevations, and immersive exhibit zones.
+                        <br><br>
+                        Translated research insights into detailed spatial planning, experiential sequencing, and architectural drawings to create an intuitive, informative, and engaging museum experience.`,
+                        methodologies: [],
+                        impact: null,
+                        externalLink: {
+                            label: 'View Full Design Process & Plans',
+                            url: 'http://drive.google.com/file/d/1_Stfq8PglErslJOLxkwDGUre8Jpr531r/view?usp=sharing'
+                        }
+                    }
+                }
+            ]
+        };
+
+        function openProject(id) {
+            const allProjects = [...portfolioData.research, ...portfolioData.caseStudies, ...portfolioData.experience, ...portfolioData.explorations, ...portfolioData.architecture];
+            const project = allProjects.find(p => p.id === id);
+            if (!project) return;
+
+            const overlayBody = document.getElementById('overlayBody');
+            const hasImpact = project.details.impact !== null;
+            const hasExternalLink = !!project.details.externalLink;
+            
+            overlayBody.innerHTML = `
+                <div class="w-full">
+                    <div class="px-6 md:px-20 pt-40 pb-20 max-w-6xl mx-auto">
+                        <div class="overview-tag">Full Case Study</div>
+                        <h2 class="text-4xl md:text-7xl font-bold text-zinc-950 mb-8 leading-[1.1] max-w-5xl">${project.title}</h2>
+                        <div class="flex items-center gap-4">
+                            <span class="w-12 h-[1px] bg-rose-300"></span>
+                            <p class="text-rose-500 font-mono text-sm uppercase tracking-widest">${project.details.subtitle}</p>
+                        </div>
+                    </div>
+                    <div class="px-6 md:px-20 pb-32 max-w-6xl mx-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+                            <div class="${(hasImpact) ? 'lg:col-span-7' : 'lg:col-span-10'} space-y-20">
+                                <section>
+                                    <h4 class="text-[10px] font-bold tracking-ultra mb-6 text-zinc-400 uppercase">01 // The Context</h4>
+                                    <div class="text-xl md:text-2xl text-zinc-700 leading-relaxed font-light">${project.details.context}</div>
+                                    ${hasExternalLink ? `
+                                        <div class="mt-12">
+                                            <a href="${project.details.externalLink.url}" target="_blank" class="inline-flex items-center gap-3 px-8 py-4 bg-rose-500 text-white rounded-full font-bold text-sm hover:bg-rose-600 transition-all shadow-lg shadow-rose-200">
+                                                <span>${project.details.externalLink.label}</span>
+                                                <i data-lucide="external-link" class="w-4 h-4"></i>
+                                            </a>
+                                        </div>` : ''}
+                                </section>
+                            </div>
+                            ${hasImpact ? `
+                            <div class="lg:col-span-5">
+                                <div class="sticky top-32 bg-rose-50/40 p-10 md:p-10 rounded-[3.5rem] border border-rose-100/50 backdrop-blur-sm overflow-hidden">
+                                    <h4 class="text-[10px] font-bold tracking-ultra mb-8 text-rose-400 uppercase">Impact & Outcomes</h4>
+                                    ${project.details.impact === 'visual_scroll' ? `
+                                        <div class="relative w-full h-96 bg-white rounded-3xl overflow-hidden border border-rose-100 shadow-inner group">
+                                            <div class="scroll-container-animate h-full">
+                                                ${[...project.details.impactData.images, ...project.details.impactData.images].map((img, idx) => `
+                                                    <div class="w-full h-full flex-shrink-0 relative">
+                                                        <img src="${img}" class="w-full h-full object-cover">
+                                                        <div class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-100 text-[10px] font-bold text-rose-500 uppercase tracking-wider text-center">${project.details.impactData.captions[idx % 2]}</div>
+                                                    </div>`).join('')}
+                                            </div>
+                                        </div>` : `
+                                        <p class="text-zinc-800 italic font-serif text-2xl md:text-3xl leading-relaxed">"${project.details.impact}"</p>`}
+                                </div>
+                            </div>` : ''}
+                        </div>
+                        <div class="mt-40 pt-16 border-t border-zinc-100 flex flex-col md:flex-row justify-between items-center gap-10">
+                            <div></div>
+                            <button onclick="closeProject()" class="group flex items-center gap-4 text-zinc-900 font-bold hover:text-rose-500 transition-all">
+                                <span class="text-xl">Back to Gallery</span>
+                                <div class="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center group-hover:border-rose-200 group-hover:bg-rose-50 transition-all">
+                                    <i data-lucide="arrow-up-right" class="w-5 h-5 group-hover:rotate-45 transition-transform"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('projectOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+            lucide.createIcons();
+        }
+
+        function closeProject() {
+            document.getElementById('projectOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(() => { document.getElementById('projectOverlay').scrollTop = 0; }, 600);
+        }
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProject(); });
+
+        function renderRows(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            data.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "project-row flex items-center justify-between p-4 rounded-xl hover:bg-white/60 group";
+                row.onclick = () => openProject(item.id);
+                row.innerHTML = `
+                    <div class="flex flex-col text-left">
+                        <span class="text-sm font-bold text-zinc-800 group-hover:text-rose-600 transition-colors">${item.title}</span>
+                        <span class="text-[9px] font-mono uppercase tracking-widest text-zinc-400 mt-0.5">${item.meta}</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-300 group-hover:text-rose-400 group-hover:translate-x-1 transition-all"></i>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRows('researchList', portfolioData.research);
+            renderRows('caseStudyList', portfolioData.caseStudies);
+            renderRows('experienceList', portfolioData.experience);
+            renderRows('explorationList', portfolioData.explorations);
+            renderRows('architectureList', portfolioData.architecture);
+            lucide.createIcons(); 
+            initCanvas();
+            animate();
+            // increase signature video playback speed
+            const sigVid = document.getElementById('signatureVideo');
+            if (sigVid) {
+                // use loadedmetadata to ensure playbackRate is applied reliably
+                sigVid.addEventListener('loadedmetadata', () => { try { sigVid.playbackRate = 1.5; } catch(e){} });
+                // also set immediately in case metadata already loaded
+                try { sigVid.playbackRate = 1.5; } catch(e){}
+            }
+        });
+
+        const canvas = document.getElementById('geometricCanvas');
+        const ctx = canvas.getContext('2d');
+        const palette = ["#fda4af", "#fecaca", "#fdba74", "#fed7aa", "#fde047", "#fef08a", "#d9f99d", "#86efac"];
+        let scrollProgress = 0, time = 0;
+
+        function initCanvas() {
+            const resize = () => {
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = window.innerWidth * dpr;
+                canvas.height = window.innerHeight * dpr;
+                ctx.scale(dpr, dpr);
+            };
+            window.onresize = resize;
+            resize();
+        }
+
+        function getKochPoints(p1, p2, depth) {
+            if (depth === 0) return [p1];
+            const dx = (p2.x - p1.x) / 3, dy = (p2.y - p1.y) / 3;
+            const a = { x: p1.x + dx, y: p1.y + dy }, c = { x: p1.x + 2 * dx, y: p1.y + 2 * dy };
+            const angle = Math.PI / 3;
+            const b = { x: a.x + dx * Math.cos(angle) + dy * Math.sin(angle), y: a.y - dx * Math.sin(angle) + dy * Math.cos(angle) };
+            return [...getKochPoints(p1, a, depth - 1), ...getKochPoints(a, b, depth - 1), ...getKochPoints(b, c, depth - 1), ...getKochPoints(c, p2, depth - 1)];
+        }
+
+        function drawShape(x, y, size, depth, color, rotation, opacity) {
+            const pts = [];
+            for (let i = 0; i < 3; i++) {
+                const ang = rotation + (i * 2 * Math.PI / 3) - Math.PI / 2;
+                pts.push({ x: x + Math.cos(ang) * size, y: y + Math.sin(ang) * size });
+            }
+            const finalPoints = [];
+            for(let i = 0; i < pts.length; i++) finalPoints.push(...getKochPoints(pts[i], pts[(i + 1) % pts.length], depth));
+            ctx.beginPath();
+            finalPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.04)";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            time += 0.005;
+            const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+            const baseSize = Math.min(window.innerWidth, window.innerHeight) * 0.45;
+            
+            const depthFloat = scrollProgress * 5.5; 
+            const currentDepth = Math.min(4, Math.floor(depthFloat));
+            const layers = 1 + (scrollProgress * 20), rotation = time + (scrollProgress * 5.0);
+            const hudDepth = document.getElementById('hudDepth');
+            if (hudDepth) hudDepth.innerText = currentDepth;
+
+            const knowledgeCard = document.getElementById('knowledgeCard');
+            const scrollIndicator = document.getElementById('scrollIndicator');
+            const recursiveText = document.getElementById('recursiveText');
+
+            for (let i = 0; i < Math.ceil(layers); i++) {
+                const dir = i % 2 === 0 ? 1 : -1;
+                const size = baseSize * Math.pow(0.8, i) * (1 + scrollProgress * 1.5);
+                drawShape(cx, cy, size, currentDepth, palette[i % palette.length], rotation * dir + (i * 0.12), Math.max(0.04, 0.5 - (i * 0.08)));
+            }
+
+            // Starts at depthFloat 1.25 (shortly after Recursive Level 1 begins)
+            if (depthFloat >= 1.25 && scrollProgress <= 0.65) {
+                recursiveText.style.opacity = "1";
+                recursiveText.style.transform = "translate(-50%, -50%) scale(1)";
+            } else {
+                recursiveText.style.opacity = "0";
+                recursiveText.style.transform = "translate(-50%, -50%) scale(0.95)";
+            }
+
+            if (scrollProgress > 0.65) {
+                knowledgeCard.style.opacity = "1";
+                const rel = (scrollProgress - 0.65) / 0.35;
+                knowledgeCard.style.transform = `translateY(${Math.max(0, (1 - rel) * 300)}px)`;
+                if (scrollIndicator) scrollIndicator.style.opacity = "0";
+            } else {
+                knowledgeCard.style.opacity = "0";
+                if (scrollIndicator) scrollIndicator.style.opacity = "1";
+                knowledgeCard.style.transform = `translateY(40vh)`;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onscroll = () => {
+            const h = document.documentElement.scrollHeight - window.innerHeight;
+            scrollProgress = window.scrollY / (h || 1);
+        };
+    </script>
+</body>
+</html>
